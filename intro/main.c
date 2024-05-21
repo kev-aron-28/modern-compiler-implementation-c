@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "util.h"
 #include "slp.h"
 #include "prog1.h"
@@ -31,9 +32,23 @@ void print_table(Table_ table)
   }
 }
 
+int lookup(Table_ interpreter, string id);
 void traverse_stm(A_stm stm, Table_ *interpreter);
-void traverse_exp(A_exp exp, string id, Table_ *interpreter);
-void traverse_expList(A_expList expList, string id, Table_ *interpreter);
+int eval_expr(A_exp exp, Table_ interpreter);
+void traverse_expList(A_expList expList, Table_ *interpreter);
+
+int lookup(Table_ interpreter, string id)
+{
+  while (interpreter != NULL)
+  {
+    if (strcmp(interpreter->id, id) == 0)
+    {
+      return interpreter->value;
+    }
+
+    interpreter = interpreter->tail;
+  }
+}
 
 void traverse_stm(A_stm stm, Table_ *interpreter)
 {
@@ -44,49 +59,66 @@ void traverse_stm(A_stm stm, Table_ *interpreter)
     traverse_stm(stm->u.compound.stm2, interpreter);
     break;
   case A_assignStm:
-    traverse_exp(stm->u.assign.exp, stm->u.assign.id, interpreter);
-    // Additional processing for assign statement
+    (*interpreter) = Table(
+        stm->u.assign.id,
+        eval_expr(stm->u.assign.exp, *interpreter),
+        *interpreter);
     break;
   case A_printStm:
-    traverse_expList(stm->u.print.exps, "", interpreter);
-    // Additional processing for print statement
+    traverse_expList(stm->u.print.exps, interpreter);
     break;
   }
 }
 
-void traverse_exp(A_exp exp, string id, Table_ *interpreter)
+int eval_expr(A_exp exp, Table_ interpreter)
 {
   switch (exp->kind)
   {
   case A_idExp:
+    return lookup(interpreter, exp->u.id);
     break;
   case A_numExp:
-    break;
+    return exp->u.num;
   case A_opExp:
-    traverse_exp(exp->u.op.left, id, interpreter);
-    traverse_exp(exp->u.op.right, id, interpreter);
-    // Additional processing for operation expression
-    break;
+  {
+    int left = eval_expr(exp->u.op.left, interpreter);
+    int right = eval_expr(exp->u.op.right, interpreter);
+
+    switch (exp->u.op.oper)
+    {
+    case A_plus:
+      return left + right;
+    case A_minus:
+      return left - right;
+    case A_times:
+      return left * right;
+    case A_div:
+      if (right == 0)
+      {
+        printf("Error division by 0\n");
+        exit(1);
+      }
+      return left / right;
+    }
+  }
   case A_eseqExp:
-    traverse_stm(exp->u.eseq.stm, interpreter);
-    traverse_exp(exp->u.eseq.exp, id, interpreter);
-    // Additional processing for eseq expression
+    traverse_stm(exp->u.eseq.stm, &interpreter);
+    return eval_expr(exp->u.eseq.exp, interpreter);
     break;
   }
 }
 
-void traverse_expList(A_expList expList, string id, Table_ *interpreter)
-{
+void traverse_expList(A_expList expList, Table_ *interpreter) {
   switch (expList->kind)
   {
   case A_pairExpList:
-    traverse_exp(expList->u.pair.head, id, interpreter);
-    traverse_expList(expList->u.pair.tail, id, interpreter);
-    // Additional processing for pair expression list
+    printf("%d\n", eval_expr(expList->u.pair.head, *interpreter));
+    traverse_expList(expList->u.pair.tail, interpreter);
     break;
   case A_lastExpList:
-    traverse_exp(expList->u.last, id, interpreter);
-    // Additional processing for last expression list
+    printf("%d\n", eval_expr(expList->u.last, *interpreter));
+    break;
+  default:
     break;
   }
 }
