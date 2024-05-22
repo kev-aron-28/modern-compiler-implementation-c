@@ -24,7 +24,10 @@ int main(int argc, char const *argv[])
       if(token->kind == EndOfFileToken) {
         break;
       }
-      printf("TOKEN %s, pos %d\n", token->text, token->position);
+
+      if(token->type == VALUE_INT) {
+        printf("NUMBER %d \n", token->value.valueInt);
+      }
 
     }
 

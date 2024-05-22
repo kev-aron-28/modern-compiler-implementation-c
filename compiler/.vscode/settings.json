@@ -2,6 +2,7 @@
   "C_Cpp.errorSquiggles": "disabled",
   "files.associations": {
     "*.vue": "vue",
-    "utils.h": "c"
+    "utils.h": "c",
+    "lexer.h": "c"
   }
 }

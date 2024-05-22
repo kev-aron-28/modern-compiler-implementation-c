@@ -5,8 +5,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 // SyntaxToken methods
+
+SyntaxToken CreateIntToken(SyntaxKind kind, int start, String text, int value) {
+  SyntaxToken token = (SyntaxToken)malloc(sizeof(struct syntaxToken));
+    if (token != NULL) {
+      token->kind = kind;
+      token->position = start;
+      token->text = (String)malloc(strlen(text) + 1);
+      strcpy(token->text, text);
+      token->type = VALUE_INT;
+      token->value.valueInt = value;
+    }
+
+  return token;
+}
+
+SyntaxToken CreateStringToken(SyntaxKind kind, int start, String text, String value) {
+  SyntaxToken token = (SyntaxToken)malloc(sizeof(struct syntaxToken));
+    if (token != NULL) {
+      token->kind = kind;
+      token->position = start;
+      token->text = (String)malloc(strlen(text) + 1);
+      strcpy(token->text, text);
+      token->type = VALUE_STRING;
+      token->value.valueString = strdup(value);
+    }
+
+  return token;
+}
+
 SyntaxToken CreateSyntaxToken(SyntaxKind kind, int start, String text) {
   SyntaxToken token = (SyntaxToken)malloc(sizeof(struct syntaxToken));
     if (token != NULL) {
@@ -14,6 +42,7 @@ SyntaxToken CreateSyntaxToken(SyntaxKind kind, int start, String text) {
       token->position = start;
       token->text = (String)malloc(strlen(text) + 1);
       strcpy(token->text, text);
+      token->type = VALUE_BAD;
     }
 
     return token;
@@ -42,6 +71,7 @@ SyntaxToken NextToken(Lexer yalLexer) {
   }
 
   if(isdigit(current)) {
+
     int start = yalLexer->position;
     while(isdigit(Current(yalLexer))) {
       Next(yalLexer);
@@ -50,7 +80,7 @@ SyntaxToken NextToken(Lexer yalLexer) {
     int length = yalLexer->position - start;
     String text = Substring(yalLexer->text, start, length);
 
-    return CreateSyntaxToken(NumberToken, start, text);
+    return CreateIntToken(NumberToken, start, text, atoi(text));
   }
 
   if(isspace(current)) {
