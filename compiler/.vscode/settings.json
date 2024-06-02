@@ -3,6 +3,7 @@
   "files.associations": {
     "*.vue": "vue",
     "utils.h": "c",
-    "lexer.h": "c"
+    "lexer.h": "c",
+    "parser.h": "c"
   }
 }
