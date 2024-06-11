@@ -39,7 +39,7 @@ int main(int argc, char const *argv[])
   String string;
   
   Parser parser = (Parser)malloc(sizeof(struct parser));
-  InitParser(parser, "5 * (2 + 5)");
+  InitParser(parser, "--2");
   ASTNode root = ParseExpression(parser);
   prettyPrintAST(root, 0);
 

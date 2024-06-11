@@ -11,7 +11,8 @@ typedef struct parser* Parser;
 
 typedef enum {
   AST_NUMBER,
-  AST_BINARY_OP
+  AST_BINARY_OP,
+  AST_UNARY_OP
 } ASTNodeType;
 
 struct astNode {
@@ -21,6 +22,11 @@ struct astNode {
     struct {
       int value;
     } number;
+
+    struct {
+      struct astNode *operand;
+      SyntaxKind op;
+    } unaryOp;
 
     struct {
       struct astNode *left;
@@ -33,9 +39,8 @@ struct astNode {
 typedef struct astNode* ASTNode;
 
 ASTNode createNumberNode(int value);
-
 ASTNode createBinaryOpNode(SyntaxKind op, ASTNode left, ASTNode right);
-
+ASTNode createUnaryOpNode(SyntaxKind op, ASTNode operand);
 
 void InitParser (Parser parser, String text);
 SyntaxToken ParserPeek(Parser parser, int offset);

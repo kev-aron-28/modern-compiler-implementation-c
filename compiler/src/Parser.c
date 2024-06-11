@@ -22,6 +22,14 @@ ASTNode createBinaryOpNode(SyntaxKind op, ASTNode left, ASTNode right)
   return node;
 }
 
+ASTNode createUnaryOpNode(SyntaxKind op, ASTNode operand) {
+  ASTNode node = (ASTNode)malloc(sizeof(struct astNode));
+  node->type = AST_UNARY_OP;
+  node->data.unaryOp.op = op;
+  node->data.unaryOp.operand = operand;
+  return node;
+}
+
 void InitParser(Parser parser, String text)
 {
   parser->tokensLen = 0;
@@ -115,9 +123,7 @@ ASTNode ParseExpression(Parser parser)
   ASTNode left = ParseTerm(parser);
   SyntaxToken token = ParserCurrent(parser);
   while (token != NULL && (token->kind == PlusToken ||
-                           token->kind == MinusToken ||
-                           token->kind == StarToken ||
-                           token->kind == DivideToken))
+                           token->kind == MinusToken))
   {
     ParserNextToken(parser);
     ASTNode right = ParseTerm(parser);
@@ -146,7 +152,15 @@ ASTNode ParseTerm(Parser parser)
 
 ASTNode ParseFactor(Parser parser)
 {
-  SyntaxToken token = ParserNextToken(parser);
+  SyntaxToken token = ParserCurrent(parser);
+ 
+  if(token->kind == PlusToken || token->kind == MinusToken) {
+    ParserNextToken(parser);
+    ASTNode operand = ParseFactor(parser);
+    return createUnaryOpNode(token->kind, operand);
+  }
+
+  token = ParserNextToken(parser);
 
   if (token->kind == NumberToken)
   {
@@ -179,7 +193,7 @@ int evaluateAST(ASTNode node)
   {
     return node->data.number.value;
   }
-  else
+  else if(node->type == AST_BINARY_OP)
   {
     int leftValue = evaluateAST(node->data.binaryOp.left);
     int rightValue = evaluateAST(node->data.binaryOp.right);
@@ -198,7 +212,22 @@ int evaluateAST(ASTNode node)
       printf("Error: Unknown operator\n");
       exit(1);
     }
+  } else if(node->type == AST_UNARY_OP) {
+    int operandValue = evaluateAST(node->data.unaryOp.operand);
+    switch (node->data.unaryOp.op)
+    {
+    case PlusToken:
+      return operandValue;
+      break;
+    case MinusToken:
+      return -operandValue;
+    default:
+      printf("Error: Unknown unary operator \n");
+      exit(1);
+      break;
+    }
   }
+
   printf("Error: Unknown node type\n");
   exit(1);
 }
